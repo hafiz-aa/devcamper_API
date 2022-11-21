@@ -1,7 +1,8 @@
+const Bootcamp = require('../models/Bootcamp')
+
 // @desc		Get all bootcamps
 // @route   GET /api/vi/bootcamps
 // @access  Public
-
 exports.getBootcamps = (req, res, next) => {
 	res.status(200).send({ success: true, message: 'Show all bootcamps' })
 }
@@ -9,7 +10,6 @@ exports.getBootcamps = (req, res, next) => {
 // @desc		Get single bootcamps
 // @route   GET /api/vi/bootcamps/:id
 // @access  Public
-
 exports.getBootcamp = (req, res, next) => {
 	res.status(200).send({ success: true, message: `Get bootcamp ${req.params.id}` })
 }
@@ -17,9 +17,14 @@ exports.getBootcamp = (req, res, next) => {
 // @desc		Create new bootcamp
 // @route   POST /api/vi/bootcamps
 // @access  Private
+exports.createBootcamp = async (req, res, next) => {
 
-exports.createBootcamp = (req, res, next) => {
-	res.status(200).send({ success: true, message: 'Create new bootcamp' })
+	const bootcamp = await Bootcamp.create(req.body)
+
+	res.status(201).json({
+		success: true,
+		data: bootcamp
+	})
 }
 
 // @desc		Update bootcamp
