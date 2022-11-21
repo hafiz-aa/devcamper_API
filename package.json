@@ -4,14 +4,17 @@
   "description": "Devcamper Backend API",
   "main": "server.js",
   "scripts": {
-  	"prod": "NODE_ENV=production node server",
-		"dev": "nodemon server"
+    "prod": "NODE_ENV=production node server",
+    "dev": "nodemon server"
   },
   "author": "Muhammad Hafiz Abdul Aziz",
   "license": "ISC",
   "dependencies": {
+    "colors": "^1.4.0",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "mongoose": "^6.7.2",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
