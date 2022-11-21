@@ -9,7 +9,13 @@ dotenv.config({ path: './config/config.env' })
 
 const app = express()
 
+// Middleware
+const logger = (req, res, next) => {
+	console.log(`${req.method} ${req.protocol}://${req.get('host')}${req.originalUrl}`)
+	next()
+}
 
+app.use(logger)
 // Mount routers 
 app.use('/api/v1/bootcamps', bootcamps)
 const PORT = process.env.PORT || 5000
