@@ -11,7 +11,7 @@ exports.getBootcamps = (req, res, next) => {
 // @access  Public
 
 exports.getBootcamp = (req, res, next) => {
-
+	res.status(200).send({ success: true, message: `Get bootcamp ${req.params.id}` })
 }
 
 // @desc		Create new bootcamp
@@ -19,7 +19,7 @@ exports.getBootcamp = (req, res, next) => {
 // @access  Private
 
 exports.createBootcamp = (req, res, next) => {
-
+	res.status(200).send({ success: true, message: 'Create new bootcamp' })
 }
 
 // @desc		Update bootcamp
@@ -27,7 +27,7 @@ exports.createBootcamp = (req, res, next) => {
 // @access  Private
 
 exports.updateBootcamp = (req, res, next) => {
-
+	res.status(200).send({ success: true, message: `Bootcamp ${req.params.id} updated` })
 }
 
 // @desc		Delete bootcamp
@@ -35,5 +35,5 @@ exports.updateBootcamp = (req, res, next) => {
 // @access  Private
 
 exports.deleteBootcamp = (req, res, next) => {
-
+	res.status(200).send({ success: true, message: 'Bootcamp deleted' })
 }
