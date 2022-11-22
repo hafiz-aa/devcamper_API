@@ -5,12 +5,24 @@ const errorHandler = (err, req, res, next) => {
 
 	error.message = err.message
 	// Log to console for dev
-	console.log(err.stack.red)
+	console.log(err)
 
 	// Mongoose bad ObjectId
 	if (err.name === 'CastError') {
-		const message = `Error, resource not found`
+		const message = `Error, resource with id ${err.value} is not found`
 		error = new errorResponse(message, 404)
+	}
+
+	// Mongoose duplicate key
+	if (err.code === 11000) {
+		const message = 'Duplicate field value entered'
+		error = new errorResponse(message, 400)
+	}
+
+	// Mongoose validator error
+	if (err.name === 'ValidationError') {
+		const message = Object.values(err.errors).map(val => val.message)
+		error = new errorResponse(message, 400)
 	}
 
 
