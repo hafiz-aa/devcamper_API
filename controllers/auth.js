@@ -1,5 +1,7 @@
+const crypto = require('crypto')
 const errorResponse = require('../utils/errorResponse')
 const asyncHandler = require('../middleware/async')
+const sendEmail = require('../utils/sendEmail')
 const User = require('../models/User')
 
 // @desc		Register new user
@@ -79,6 +81,28 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
 	await user.save({ validateBeforeSave: false })
 
+	// Create reset url
+	const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/auth/resetpassword/${resetToken}`
+
+	const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+	try {
+		await sendEmail({
+			email: user.email,
+			subject: 'Password reset token',
+			message
+		})
+		res.status(200).json({ success: true, data: 'Email sent' })
+	} catch (err) {
+		console.log(err)
+		user.resetPasswordToken = undefined
+		user.resetPasswordExpire = undefined
+
+		await user.save({ validateBeforeSave: false })
+
+		return next(new errorResponse(`Email could not be send `, 500))
+	}
+
 	res.status(200).json({
 		sucess: true,
 		data: user
@@ -87,25 +111,92 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 })
 
 
+// @desc		Reset password
+// @route   PUT /api/v1/auth/me
+// @access  Public
+
+exports.resetPassword = asyncHandler(async (req, res, next) => {
+	// Get hashed token
+	const resetPasswordToken = crypto
+		.createHash('sha256')
+		.update(req.params.resettoken)
+		.digest('hex')
+
+	const user = await User.findOne({
+		resetPasswordToken,
+		resetPasswordExpire: { $gt: Date.now() }
+	})
+
+	if (!user) {
+		return next(new errorResponse('Invalid token', 400))
+	}
+
+	// Set new password
+	user.password = req.body.password
+	user.resetPasswordToken = undefined
+	user.resetPasswordExpire = undefined
+	await user.save()
+
+	res.status(200).json({
+		sucess: true,
+		data: user
+	})
+})
+
+exports.confirmEmail = asyncHandler(async (req, res, next) => {
+	// grab token from email
+	const { token } = req.query;
+
+	if (!token) {
+		return next(new ErrorResponse('Invalid Token', 400));
+	}
+
+	const splitToken = token.split('.')[0];
+	const confirmEmailToken = crypto
+		.createHash('sha256')
+		.update(splitToken)
+		.digest('hex');
+
+	// get user by token
+	const user = await User.findOne({
+		confirmEmailToken,
+		isEmailConfirmed: false,
+	});
+
+	if (!user) {
+		return next(new ErrorResponse('Invalid Token', 400));
+	}
+
+	// update confirmed to true
+	user.confirmEmailToken = undefined;
+	user.isEmailConfirmed = true;
+
+	// save
+	user.save({ validateBeforeSave: false });
+
+	// return token
+	sendTokenResponse(user, 200, res);
+});
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
 	// Create token
-	const token = user.getSignedJwtToken()
+	const token = user.getSignedJwtToken();
 
 	const options = {
-		expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
-		httpOnly: true
-	}
+		expires: new Date(
+			Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
+		),
+		httpOnly: true,
+	};
 
 	if (process.env.NODE_ENV === 'production') {
-		options.secure = true
+		options.secure = true;
 	}
 
-	res
-		.status(statusCode)
-		.cookie('token', token, options)
-		.json({
-			success: true,
-			token
-		})
-}
+	res.status(statusCode).cookie('token', token, options).json({
+		success: true,
+		token,
+	});
+};
+
