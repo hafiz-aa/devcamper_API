@@ -1,35 +1,25 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const ReviewSchema = new mongoose.Schema({
 	title: {
 		type: String,
 		trim: true,
-		required: [true, "Please add course title"]
+		required: [true, 'Please add a title for the review'],
+		maxlength: 100
 	},
-	description: {
+	text: {
 		type: String,
-		required: [true, "Please add a description"]
+		required: [true, 'Please add some text']
 	},
-	weeks: {
-		type: String,
-		required: [true, "Please add a number of weeks"]
-	},
-	tuition: {
+	rating: {
 		type: Number,
-		required: [true, "Please add a tuition"]
-	},
-	minimumSkill: {
-		type: String,
-		required: [true, "Please add a minimum skill"],
-		enum: ['beginner', 'intermediate', 'advance']
-	},
-	scholarshipAvailable: {
-		type: Boolean,
-		default: false,
+		min: 1,
+		max: 10,
+		required: [true, 'Please add a rating between 1 and 10']
 	},
 	createdAt: {
 		type: Date,
-		defaulte: Date.now
+		default: Date.now
 	},
 	bootcamp: {
 		type: mongoose.Schema.ObjectId,
@@ -41,11 +31,13 @@ const ReviewSchema = new mongoose.Schema({
 		ref: 'User',
 		required: true
 	}
-})
+});
 
-// Static method to get average of course tuition
-ReviewSchema.statics.getAverageCost = async function (bootcampId) {
+// Prevent user from submitting more than one review per bootcamp
+ReviewSchema.index({ bootcamp: 1, user: 1 }, { unique: true });
 
+// Static method to get avg rating and save
+ReviewSchema.statics.getAverageRating = async function (bootcampId) {
 	const obj = await this.aggregate([
 		{
 			$match: { bootcamp: bootcampId }
@@ -53,29 +45,28 @@ ReviewSchema.statics.getAverageCost = async function (bootcampId) {
 		{
 			$group: {
 				_id: '$bootcamp',
-				averageCost: { $avg: '$tuition' }
+				averageRating: { $avg: '$rating' }
 			}
 		}
-	])
+	]);
 
-	// Update the average cost to the database
 	try {
 		await this.model('Bootcamp').findByIdAndUpdate(bootcampId, {
-			averageCost: Math.ceil(obj[0].averageCost / 10) * 10
-		})
+			averageRating: obj[0].averageRating
+		});
 	} catch (err) {
-		console.error(err)
-
+		console.error(err);
 	}
-}
+};
 
-// Call getAverageCosr after save
-ReviewSchema.post('save', function () {
-	this.constructor.getAverageCost(this.bootcamp)
-})
-// Call getAverageCosr before remove
-ReviewSchema.pre('remove', function () {
-	this.constructor.getAverageCost(this.bootcamp)
-})
+// Call getAverageCost after save
+ReviewSchema.post('save', async function () {
+	await this.constructor.getAverageRating(this.bootcamp);
+});
 
-module.exports = mongoose.model('Review', ReviewSchema)
+// Call getAverageCost before remove
+ReviewSchema.post('remove', async function () {
+	await this.constructor.getAverageRating(this.bootcamp);
+});
+
+module.exports = mongoose.model('Review', ReviewSchema);
