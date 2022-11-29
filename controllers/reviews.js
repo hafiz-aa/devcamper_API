@@ -106,3 +106,33 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
 		data: review
 	})
 })
+
+exports.deleteReview = asyncHandler(async (req, res, next) => {
+	const review = await Review.findById(req.params.id)
+
+	if (!review) {
+		return next(
+			new errorResponse(`No review found for id : ${req.params.id}`,
+				404
+			),
+		)
+	}
+
+	// Make sure review belongs to the user or user is an admin
+	if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new errorResponse(`You are not authorized to update this review`,
+				401
+			),
+		)
+	}
+
+	await review.remove()
+
+	review.save()
+
+	res.status(200).json({
+		success: true,
+		data: {}
+	})
+})
