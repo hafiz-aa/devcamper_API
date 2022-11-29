@@ -69,3 +69,40 @@ exports.addReview = asyncHandler(async (req, res, next) => {
 		data: review
 	})
 })
+
+// @desc		Update a single review
+// @route   PUT /api/v1/reviews/:id
+// @access  Public
+
+exports.updateReview = asyncHandler(async (req, res, next) => {
+	let review = await Review.findById(req.params.id)
+
+	if (!review) {
+		return next(
+			new errorResponse(`No review found for id : ${req.params.id}`,
+				404
+			),
+		)
+	}
+
+	// Make sure review belongs to the user or user is an admin
+	if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+		return next(
+			new errorResponse(`You are not authorized to update this review`,
+				401
+			),
+		)
+	}
+
+	review = await Review.findByIdAndUpdate(req.params.id, req.body, {
+		new: true,
+		runValidators: true
+	})
+
+	review.save()
+
+	res.status(200).json({
+		success: true,
+		data: review
+	})
+})
