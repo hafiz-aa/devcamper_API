@@ -14,6 +14,7 @@ const advancedResults = require('../middleware/advancedResults')
 
 // Include other resource routers
 const courseRouter = require('./courses')
+const reviewRouter = require('./reviews')
 
 const router = express.Router()
 
@@ -35,7 +36,10 @@ router
 router
 	.use('/:bootcampId/courses',
 		courseRouter)
-//
+router
+	.use('/:bootcampId/reviews',
+		reviewRouter)
+// Photo for bootcamp route
 router
 	.route('/:id/photo')
 	.put(protect, authorize('publisher', 'admin'), uploadPhotoBootcamp)
