@@ -1,20 +1,31 @@
 const mongoose = require('mongoose')
 
-const ReviewSchema = new mongoose.Schema({
+const CourseSchema = new mongoose.Schema({
 	title: {
 		type: String,
 		trim: true,
-		required: [true, "Please add a title for the review"]
+		required: [true, "Please add course title"]
 	},
-	text: {
+	description: {
 		type: String,
-		required: [true, "Please add some text"]
+		required: [true, "Please add a description"]
 	},
-	rating: {
+	weeks: {
+		type: String,
+		required: [true, "Please add a number of weeks"]
+	},
+	tuition: {
 		type: Number,
-		min: 1,
-		max: 10,
-		required: [true, "Please add a rating between 1 to 10"]
+		required: [true, "Please add a tuition"]
+	},
+	minimumSkill: {
+		type: String,
+		required: [true, "Please add a minimum skill"],
+		enum: ['beginner', 'intermediate', 'advance']
+	},
+	scholarshipAvailable: {
+		type: Boolean,
+		default: false,
 	},
 	createdAt: {
 		type: Date,
@@ -67,4 +78,4 @@ CourseSchema.pre('remove', function () {
 	this.constructor.getAverageCost(this.bootcamp)
 })
 
-module.exports = mongoose.model('Course', CourseSchema)
+module.exports = mongoose.model('Review', ReviewSchema)
