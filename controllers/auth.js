@@ -47,12 +47,21 @@ exports.login = asyncHandler(async (req, res, next) => {
 	sendTokenResponse(user, 200, res)
 })
 
+// @desc		Log user out / clear cookie 
+// @route   GET /api/v1/auth/logout
+// @access  Private
+exports.logout = asyncHandler(async (req, res, next) => {
+	res.clearCookie('token')
+	res.status(200).json({
+		sucess: true,
+		data: {}
+	})
+})
 
 
 // @desc		Get current login user
 // @route   POST /api/v1/auth/me
 // @access  Private
-
 exports.getMe = asyncHandler(async (req, res, next) => {
 	const user = await User.findById(req.user.id)
 
@@ -65,7 +74,6 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 // @desc		Update user detail
 // @route   PUT /api/v1/auth/updatedetails
 // @access  Private
-
 exports.updateDetails = asyncHandler(async (req, res, next) => {
 	const fieldsToUpdate = {
 		name: req.body.name,
@@ -86,7 +94,6 @@ exports.updateDetails = asyncHandler(async (req, res, next) => {
 // @desc		Update password
 // @route   PUT /api/v1/auth/updatepassword
 // @access  Private
-
 exports.updatePassword = asyncHandler(async (req, res, next) => {
 	const user = await User.findById(req.user.id).select('+password')
 
@@ -104,7 +111,6 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 // @desc		Forgot password
 // @route   POST /api/v1/auth/forgotpassword
 // @access  Public
-
 exports.forgotPassword = asyncHandler(async (req, res, next) => {
 	const user = await User.findOne({ email: req.body.email })
 
@@ -152,7 +158,6 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 // @desc		Reset password
 // @route   PUT /api/v1/auth/me
 // @access  Public
-
 exports.resetPassword = asyncHandler(async (req, res, next) => {
 	// Get hashed token
 	const resetPasswordToken = crypto
